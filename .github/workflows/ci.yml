@@ -42,7 +42,8 @@ jobs:
       uses: actions/upload-artifact@master
       with:
          name: Depcheck report
-         path: ${{github.workspace}}/reports
+         path: ${{github.workspace}}/reports${{ matrix.node-version }}
+         overwrite: true
 
     - name: Run ESLint security analysis
       run: npx eslint . --config .eslintrc.json --ext .js --format json --output-file eslint-report.json || true
