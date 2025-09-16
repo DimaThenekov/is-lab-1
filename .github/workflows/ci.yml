@@ -1,0 +1,79 @@
+name: CI/CD Pipeline with Security Scanning
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  security-scanning:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run npm audit for vulnerability scanning
+      run: npm audit --audit-level=high
+
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check@main
+      with:
+        project: 'secure-express-api'
+        path: '.'
+        format: 'HTML'
+        out: 'reports'
+
+    - name: Upload OWASP Dependency Check report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: dependency-check-report
+        path: reports
+
+    - name: Run ESLint security analysis
+      run: npx eslint . --config .eslintrc.json --ext .js --format json --output-file eslint-report.json || true
+
+    - name: Upload ESLint report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: eslint-report
+        path: eslint-report.json
+
+  test-api:
+    runs-on: ubuntu-latest
+    needs: security-scanning
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Start server and run tests
+      run: |
+        npm start &
+        sleep 5
+        npm test
