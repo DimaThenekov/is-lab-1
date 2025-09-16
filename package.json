@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest --testTimeout=10000",
+    "test": "jest --testTimeout=10000 --detectOpenHandles --forceExit",
     "lint": "eslint . --config eslint.config.js --ext .js",
     "audit": "npm audit --audit-level=high",
     "security-scan": "npm run lint && npm run audit"
