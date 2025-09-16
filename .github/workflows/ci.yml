@@ -31,19 +31,18 @@ jobs:
       run: npm audit --audit-level=high
 
     - name: Run OWASP Dependency Check
-      uses: dependency-check/Dependency-Check@main
+      uses: dependency-check/Dependency-Check_Action@main
       with:
-        project: 'secure-express-api'
+        project: 'test'
         path: '.'
         format: 'HTML'
         out: 'reports'
 
-    - name: Upload OWASP Dependency Check report
-      uses: actions/upload-artifact@v4
-      if: always()
+    - name: Upload Test results
+      uses: actions/upload-artifact@master
       with:
-        name: dependency-check-report
-        path: reports
+         name: Depcheck report
+         path: ${{github.workspace}}/reports
 
     - name: Run ESLint security analysis
       run: npx eslint . --config .eslintrc.json --ext .js --format json --output-file eslint-report.json || true
